@@ -5,8 +5,7 @@ This project implements a Zero-Trust Network Architecture to secure an Azure Sto
 
 Using Terraform, this repository automates the deployment of a Hub-and-Spoke topology, Private Link integration, and a private DNS strategy.
 
-```
-mermaid
+```mermaid
 graph LR
     subgraph Internet
         User((External User))
