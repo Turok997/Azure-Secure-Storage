@@ -69,7 +69,7 @@ resource "azurerm_storage_account" "secure_storage" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
-  public_network_access_enabled = true
+  public_network_access_enabled = false
   shared_access_key_enabled      = true 
   
   network_rules {

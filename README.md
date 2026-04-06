@@ -35,76 +35,51 @@ graph LR
     DNS -. "Resolves to 10.1.1.x" .-> PE
 ```
 
-Architecture Highlights
+## 🏗️ Architecture Highlights
 
 The infrastructure is built on the following core components:
 
-    Hub-and-Spoke VNet Topology: Logical separation between the management network (Hub) and the resource-hosting network (Spoke).
+* **Hub-and-Spoke VNet Topology:** Logical separation between the management network (**Hub**) and the resource-hosting network (**Spoke**).
+* **Virtual Network Peering:** Enables low-latency, private routing between the two networks without traversing the public internet.
+* **Private Endpoint:** Assigns a dedicated private IP address from the Spoke subnet to the Storage Account.
+* **Private DNS Zone:** Implements internal name resolution so that `blob.core.windows.net` requests stay within the Azure backbone.
+* **Network Firewall (Stateless):** The Storage Account is configured with `default_action = "Deny"`, effectively "blackholing" all unauthorized external traffic.
 
-    Virtual Network Peering: Enables low-latency, private routing between the two networks without traversing the public internet.
+---
 
-    Private Endpoint: Assigns a dedicated private IP address from the Spoke subnet to the Storage Account.
+## 🛠️ Technical Specifications
 
-    Private DNS Zone: Implements internal name resolution so that blob.core.windows.net requests stay within the Azure backbone.
+| Category | Specification |
+| :--- | :--- |
+| **Infrastructure as Code** | Terraform (AzureRM Provider ~> 3.0) |
+| **Storage Tier** | Standard with LRS (Locally Redundant Storage) |
+| **Security Posture** | Public Network Access Disabled; Shared Key Access Enabled |
+| **DNS Resolution** | Private DNS Zone for `privatelink.blob.core.windows.net` |
+| **Address Space** | Hub (10.0.0.0/16) & Spoke (10.1.0.0/16) |
 
-    Network Firewall (Stateless): The Storage Account is configured with default_action = "Deny", effectively "blackholing" all unauthorized external traffic.
+---
 
-Technical Specifications
+## 🚀 Getting Started
 
-    Infrastructure as Code: Terraform (AzureRM Provider ~> 3.0)
+### Prerequisites
+* An active **Azure Subscription**.
+* **Terraform CLI** installed.
+* Authenticated session via **Azure CLI** (`az login`).
 
-    Storage Configuration: Standard Tier with LRS (Locally Redundant Storage) for cost-efficiency.
+### Deployment Steps
 
-    Security Posture: Public Network Access Disabled; Shared Key Access Enabled (supporting SAS token delegation).
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/Turok997/azure-secure-storage.git](https://github.com/Turok997/azure-secure-storage.git)
+   cd azure-secure-storage
 
-    DNS Resolution: Private DNS Zone for privatelink.blob.core.windows.net.
+2. **Initialize the working directory:**
+terraform init
 
-    Address Space: Hub Network (10.0.0.0/16) and Spoke Network (10.1.0.0/16).
+3. **Review the execution plan:**
+terraform plan
 
-Getting Started
-Prerequisites
+3. **Deploy the infrastructure:**
+terraform apply
 
-    An active Azure Subscription.
-
-    Terraform CLI installed.
-
-    Authenticated session via Azure CLI (az login).
-
-Deployment Steps
-
-    Clone the repository:
-    Bash
-
-    git clone https://github.com/Turok997/azure-secure-storage.git
-    cd azure-secure-storage
-
-    Initialize the working directory:
-    Bash
-
-    terraform init
-
-    Review the execution plan:
-    Bash
-
-    terraform plan
-    
-
-    Deploy the infrastructure:
-    Bash
-
-    terraform apply:
-    Due to Azure Storage Firewall propagation latency, a subsequent terraform apply might be required to finalize container creation after whitelisting the deployment runner's IP
-
-Verification and Security
-
-    Isolation Test: Attempts to access the storage blob URL from a local machine will result in a 403 Forbidden error.
-
-    Internal Access: Name resolution within the Spoke VNet will point to a private IP (e.g., 10.1.1.X).
-
-    Split-Horizon DNS: This setup prevents DNS leaking and ensures that service endpoints are only discoverable internally.
-
-Cleanup
-
-To avoid ongoing costs (estimated < 1€ for a short deployment), ensure you destroy the resources after testing:
-
-    terraform destroy
+Note: Due to Azure Storage Firewall propagation latency, a subsequent terraform apply might be required to finalize container creation after whitelisting the deployment runner's IP.

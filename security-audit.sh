@@ -1,12 +1,22 @@
 #!/bin/bash
-# Technical validation of the Secure Enclave
+# simple audit script for the Secure Storage Enclave
 
-STORAGE_NAME="stsecureXXXX" # Replace with actual name
+# Variables from Terraform (or set manually)
+SA_NAME=$(terraform output -raw storage_account_name)
+RG_NAME=$(terraform output -raw resource_group_name)
 
-echo "1. Testing Public Access (Expected: 403 Forbidden)..."
-curl -I https://$STORAGE_NAME.blob.core.windows.net/internal-data
-# This should fail from your local machine, proving network isolation.
+echo "--- STARTING SECURITY AUDIT FOR $SA_NAME ---"
 
-echo "2. Testing DNS Resolution..."
-nslookup $STORAGE_NAME.blob.core.windows.net
-# From within the VNet, this must return a 10.1.1.x address.
+# 1. Check: public Network Access
+PUBLIC_ACCESS=$(az storage account show --name $SA_NAME --resource-group $RG_NAME --query publicNetworkAccess -o tsv)
+echo "[*] Public Network Access: $PUBLIC_ACCESS"
+
+# 2. Check: TLS Version (1.2)
+TLS_VER=$(az storage account show --name $SA_NAME --resource-group $RG_NAME --query minimumTlsVersion -o tsv)
+echo "[*] Minimum TLS Version: $TLS_VER"
+
+# 3. Check: Immutability Policy on the 'legal' Container
+echo "[*] Checking Immutability Policy on 'legal-audit-logs'..."
+az storage container immutability-policy show --account-name $SA_NAME --container-name legal-audit-logs
+
+echo "--- AUDIT COMPLETE ---"
