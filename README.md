@@ -7,32 +7,37 @@ Using Terraform, this repository automates the deployment of a Hub-and-Spoke top
 
 ```mermaid
 graph LR
-    subgraph Internet
+    subgraph Internet ["Public Internet"]
         User((External User))
     end
 
-    subgraph "Azure Region (West Europe)"
-        subgraph "Hub VNet (10.0.0.0/16)"
-            HubGate[Management Gateway]
+    subgraph Azure ["Azure Region (West Europe)"]
+        subgraph HubVNet ["Hub VNet (Management)"]
+            Admin[Admin/VPN Gateway]
         end
 
-        subgraph "Spoke VNet (10.1.0.0/16)"
+        subgraph SpokeVNet ["Spoke VNet (Data)"]
             direction TB
-            subgraph "Endpoint Subnet (10.1.1.0/24)"
+            subgraph Subnet ["Endpoint Subnet (10.1.1.0/24)"]
                 PE[Private Endpoint]
-                DNS[Private DNS Record]
+                DNS[Private DNS Zone]
             end
             
-            subgraph "Storage Service"
-                ST[(Secure Storage)]
+            subgraph StorageEnclave ["Isolated Storage"]
+                ST[(Secure Storage Account)]
             end
         end
     end
 
-    User -- "Blocked (403)" --> ST
-    HubGate -- "Peering" --> PE
+    %% Traffic Flows
+    User -- "✖ Connection Refused (Public Access Disabled)" --- ST
+    Admin -- "VNet Peering" --> PE
     PE -- "Private Link" --> ST
-    DNS -. "Resolves to 10.1.1.x" .-> PE
+    DNS -. "Resolves to Private IP (10.1.1.x)" .-> PE
+
+    %% Styling
+    style ST fill:#f96,stroke:#333,stroke-width:2px
+    style User stroke-dasharray: 5 5
 ```
 
 ## 🏗️ Architecture Highlights

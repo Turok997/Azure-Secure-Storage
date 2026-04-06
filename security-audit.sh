@@ -1,22 +1,31 @@
 #!/bin/bash
-# simple audit script for the Secure Storage Enclave
 
-# Variables from Terraform (or set manually)
-SA_NAME=$(terraform output -raw storage_account_name)
+# Fetching values dynamically from Terraform outputs
+STORAGE_NAME=$(terraform output -raw storage_account_name)
 RG_NAME=$(terraform output -raw resource_group_name)
 
-echo "--- STARTING SECURITY AUDIT FOR $SA_NAME ---"
+echo "--------------------------------------------------------"
+echo "SECURITY AUDIT: $STORAGE_NAME"
+echo "--------------------------------------------------------"
 
-# 1. Check: public Network Access
-PUBLIC_ACCESS=$(az storage account show --name $SA_NAME --resource-group $RG_NAME --query publicNetworkAccess -o tsv)
-echo "[*] Public Network Access: $PUBLIC_ACCESS"
+# 1. Verify Public Network Access status
+echo "[CHECK] Public Network Access..."
+STATUS=$(az storage account show --name $STORAGE_NAME --resource-group $RG_NAME --query publicNetworkAccess -o tsv)
 
-# 2. Check: TLS Version (1.2)
-TLS_VER=$(az storage account show --name $SA_NAME --resource-group $RG_NAME --query minimumTlsVersion -o tsv)
-echo "[*] Minimum TLS Version: $TLS_VER"
+if [ "$STATUS" == "Disabled" ]; then
+    echo "SUCCESS: Public Access is Disabled (Zero Trust Compliant)."
+else
+    echo "WARNING: Public Access is still enabled!"
+fi
 
-# 3. Check: Immutability Policy on the 'legal' Container
-echo "[*] Checking Immutability Policy on 'legal-audit-logs'..."
-az storage container immutability-policy show --account-name $SA_NAME --container-name legal-audit-logs
+# 2. Verify Minimum TLS Version
+echo "[CHECK] Minimum TLS Version..."
+TLS=$(az storage account show --name $STORAGE_NAME --resource-group $RG_NAME --query minimumTlsVersion -o tsv)
+echo "RESULT: TLS version is set to $TLS"
 
-echo "--- AUDIT COMPLETE ---"
+# 3. Verify Immutability Policy status
+echo "[CHECK] Container Immutability Policy..."
+az storage container immutability-policy show --account-name $STORAGE_NAME --container-name legal-audit-logs --query "immutabilityPeriodSinceCreationInDays" -o table
+
+echo "--------------------------------------------------------"
+echo "AUDIT COMPLETE"

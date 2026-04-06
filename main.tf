@@ -75,7 +75,7 @@ resource "azurerm_storage_account" "secure_storage" {
   network_rules {
     default_action = "Deny"
     bypass         = ["AzureServices"]
-    ip_rules       = [var.my_ip_address] # VARIABLE aus terraform.tfvars
+    ip_rules       = [var.my_ip_address] # variable from terraform.tfvars
   }
 }
 
