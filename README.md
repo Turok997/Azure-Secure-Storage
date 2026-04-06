@@ -75,7 +75,7 @@ The infrastructure is built on the following core components:
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/Turok997/azure-secure-storage.git](https://github.com/Turok997/azure-secure-storage.git)
+   git clone [https://github.com/Turok997/Azure-Secure-Storage.git](https://github.com/Turok997/azure-secure-storage.git)
    cd azure-secure-storage
 
 2. **Initialize the working directory:**
